@@ -127,14 +127,24 @@ fun Content(
     LazyColumn(
         modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        items(emails.value) { email ->
-            EmailCard(email = email,
-                homeViewModel = homeViewModel,
-                modifier = Modifier.padding(vertical = 8.dp),
-                onEmailClick = {
-                    onEmailClick(email)
-                    homeViewModel.setEmailAsOpened(email.id)
-                })
+        if (emails.value.isEmpty()) {
+            item {
+                Text(
+                    text = "Nenhum email encontrado. \uD83D\uDE14",
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(top = 64.dp)
+                )
+            }
+        } else {
+            items(emails.value) { email ->
+                EmailCard(email = email,
+                    homeViewModel = homeViewModel,
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    onEmailClick = {
+                        onEmailClick(email)
+                        homeViewModel.setEmailAsOpened(email.id)
+                    })
+            }
         }
     }
 }

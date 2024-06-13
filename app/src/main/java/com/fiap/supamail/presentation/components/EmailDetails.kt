@@ -78,9 +78,24 @@ fun EmailDetails(
         val email = viewModel.email.collectAsState().value
         email?.let {
             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 64.dp)) {
-                Text("De: ${it.sender}", fontSize = 18.sp, overflow = TextOverflow.Ellipsis)
-                Text("Para: ${it.receiver}", fontSize = 14.sp, overflow = TextOverflow.Ellipsis)
-                Text("Assunto: ${it.subject}", fontSize = 14.sp, overflow = TextOverflow.Ellipsis)
+                Text(
+                    "De: ${it.sender}",
+                    fontSize = 18.sp,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
+                Text(
+                    "Para: ${it.receiver}",
+                    fontSize = 14.sp,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
+                Text(
+                    "Assunto: ${it.subject}",
+                    fontSize = 14.sp,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
                 Divider(Modifier.padding(vertical = 16.dp))
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(it.body)
