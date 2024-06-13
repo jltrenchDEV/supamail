@@ -25,15 +25,18 @@ fun SearchEmailBar(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .background(color = Color.White, shape = MaterialTheme.shapes.small),
+            .background(
+                color = MaterialTheme.colorScheme.onBackground,
+                shape = MaterialTheme.shapes.small
+            ),
         contentAlignment = Alignment.Center
     ) {
         BasicTextField(
             value = searchQuery,
             onValueChange = onSearchQueryChange,
-            textStyle = TextStyle(fontSize = 18.sp, color = Color.Black),
+            textStyle = TextStyle(fontSize = 18.sp, color = MaterialTheme.colorScheme.background),
             singleLine = true,
-            cursorBrush = SolidColor(Color.Black),
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.background),
             decorationBox = { innerTextField ->
                 Box(
                     modifier = Modifier
