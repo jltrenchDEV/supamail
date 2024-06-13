@@ -2,7 +2,6 @@ package com.fiap.supamail.di
 
 import android.app.Application
 import android.content.ContentValues
-import android.provider.ContactsContract.CommonDataKinds.Email
 import androidx.room.OnConflictStrategy
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -30,25 +29,33 @@ object AppModule {
             .addCallback(object : RoomDatabase.Callback() {
                 override fun onCreate(db: SupportSQLiteDatabase) {
                     super.onCreate(db)
-                    // Valores iniciais
+
                     val contentValues1 = ContentValues().apply {
-                        put("sender", "example1@example.com")
-                        put("subject", "Assunto Exemplo 1")
-                        put("body", "Corpo do email exemplo 1")
-                        put("alreadyOpened", true)
+                        put("sender", "email@outlook.com")
+                        put("receiver", "Você")
+                        put("subject", "Título Qualquer")
+                        put(
+                            "body",
+                            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Volutpat blandit aliquam etiam erat velit scelerisque in dictum non. Lorem mollis aliquam ut porttitor leo a."
+                        )
+                        put("alreadyOpened", false)
                         put("favorite", false)
                         put("sentDate", "2024-06-10")
                     }
                     val contentValues2 = ContentValues().apply {
-                        put("sender", "example2@example.com")
-                        put("subject", "Assunto Exemplo 2")
-                        put("body", "Corpo do email exemplo 2")
+                        put("sender", "email2@gmail.com")
+                        put("receiver", "Você")
+                        put("subject", "Aprenda Kotlin!")
+                        put(
+                            "body",
+                            "Quam quisque id diam vel quam elementum pulvinar etiam. Ultrices dui sapien eget mi proin sed. Nec sagittis aliquam malesuada bibendum arcu vitae. Integer quis auctor elit sed vulputate mi sit amet mauris. Fermentum leo vel orci porta non pulvinar neque laoreet. Ornare arcu dui vivamus arcu felis bibendum ut tristique et."
+                        )
                         put("alreadyOpened", false)
-                        put("favorite", true)
+                        put("favorite", false)
                         put("sentDate", "2024-06-11")
                     }
-                    db.insert("emails", OnConflictStrategy.IGNORE, contentValues1)
-                    db.insert("emails", OnConflictStrategy.IGNORE, contentValues2)
+                    db.insert("emails", OnConflictStrategy.REPLACE, contentValues1)
+                    db.insert("emails", OnConflictStrategy.REPLACE, contentValues2)
                 }
             })
             .build()

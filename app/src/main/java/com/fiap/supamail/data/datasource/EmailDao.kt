@@ -20,6 +20,27 @@ interface EmailDao {
     @Update
     suspend fun update(emailEntity: EmailEntity)
 
-    @Query("SELECT * FROM emails")
+    @Query("SELECT * FROM emails ORDER BY id DESC")
     fun getAllEmails(): Flow<List<EmailEntity>>
+
+    @Query("SELECT * FROM emails where id = :id")
+    fun getEmail(id: Int): EmailEntity
+
+    @Query("SELECT * FROM emails WHERE subject LIKE :subject")
+    fun getEmailsBySubject(subject: String): Flow<List<EmailEntity>>
+
+    @Query("SELECT * FROM emails WHERE favorite = 1")
+    fun getFavoriteEmails(): Flow<List<EmailEntity>>
+
+    @Query("SELECT * FROM emails ORDER BY sentDate ASC")
+    fun getEmailsAscByDate(): Flow<List<EmailEntity>>
+
+    @Query("SELECT * FROM emails ORDER BY sentDate DESC")
+    fun getEmailsDescByDate(): Flow<List<EmailEntity>>
+
+    @Query("UPDATE emails SET alreadyOpened = 1 WHERE id = :emailId")
+    suspend fun updateEmailAsOpened(emailId: Int)
+
+    @Query("UPDATE emails SET favorite = :isFavorite WHERE id = :emailId")
+    suspend fun updateEmailFavoriteStatus(emailId: Int, isFavorite: Int)
 }

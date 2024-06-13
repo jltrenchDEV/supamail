@@ -15,6 +15,9 @@ data class EmailEntity(
     @SerialName("sender")
     val sender: String = "",
 
+    @SerialName("receiver")
+    val receiver: String = "",
+
     @SerialName("subject")
     val subject: String = "",
 

@@ -1,239 +1,140 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.fiap.supamail.presentation
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Card
-import androidx.compose.material3.Checkbox
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
 import com.fiap.supamail.data.entity.EmailEntity
+import com.fiap.supamail.presentation.components.EmailCard
+import com.fiap.supamail.presentation.components.NewEmailDialog
+import com.fiap.supamail.presentation.components.SearchEmailBar
 
 @Composable
-fun HomeScreen() {
-
+fun HomeScreen(navController: NavHostController) {
     val viewModel = hiltViewModel<HomeViewModel>()
-    Content(homeViewModel = viewModel)
+    var showDialog by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    var showMenu by remember { mutableStateOf(false) }
+    var activeFilter by remember { mutableStateOf("Todos") }
+    val menuItems = listOf("Todos", "Apenas Favoritos", "Desc. por data", "Asc. por data")
+
+    Scaffold(topBar = {
+        TopAppBar(title = { Text("Supamail") }, actions = {
+            IconButton(onClick = { showMenu = true }) {
+                Icon(Icons.Filled.Menu, contentDescription = "Filtrar")
+            }
+            DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                DropdownMenuItem(text = { Text("Filtros") }, onClick = {})
+                Divider()
+                menuItems.forEach { label ->
+                    DropdownMenuItem(text = {
+                        Text(
+                            label,
+                            style = if (activeFilter == label) MaterialTheme.typography.bodyMedium.copy(
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            ) else MaterialTheme.typography.bodySmall
+                        )
+                    }, onClick = {
+                        showMenu = false
+                        activeFilter = label
+                        when (label) {
+                            "Todos" -> {
+                                viewModel.setFilter(HomeViewModel.Filter.None)
+                            }
+
+                            "Apenas Favoritos" -> {
+                                viewModel.setFilter(HomeViewModel.Filter.Favorite)
+                            }
+
+                            "Desc. por data" -> {
+                                viewModel.setFilter(HomeViewModel.Filter.DescDate)
+                            }
+
+                            "Asc. por data" -> {
+                                viewModel.setFilter(HomeViewModel.Filter.AscDate)
+                            }
+                        }
+                    })
+                }
+            }
+        })
+    }, floatingActionButton = {
+        FloatingActionButton(onClick = { showDialog = true }) {
+            Icon(Icons.Filled.Add, contentDescription = "Adicionar novo email")
+        }
+    }) { padding ->
+        if (showDialog) {
+            NewEmailDialog(homeViewModel = viewModel, onDialogClose = { showDialog = false })
+        }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            SearchEmailBar(searchQuery = searchQuery, onSearchQueryChange = { newValue ->
+                searchQuery = newValue
+                viewModel.getEmailsBySubject(searchQuery)
+            })
+            Content(
+                homeViewModel = viewModel,
+                onEmailClick = { email -> navController.navigate("emailDetails/${email.id}") },
+            )
+        }
+    }
 }
 
 @Composable
 fun Content(
-    homeViewModel: HomeViewModel
+    homeViewModel: HomeViewModel, onEmailClick: (EmailEntity) -> Unit
 ) {
+    val emails = homeViewModel.emails.collectAsState(emptyList())
 
     LaunchedEffect(key1 = true, block = {
-        homeViewModel.getEmailDetails()
+        homeViewModel.setFilter(HomeViewModel.Filter.None)
     })
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.5f), contentAlignment = Alignment.TopCenter
-        ) {
-            TopContent(homeViewModel = homeViewModel)
-        }
-        Text(
-            text = "Emails:",
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Bold
-        )
-
-        BottomContent(homeViewModel = homeViewModel)
-
-
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun TopContent(
-    homeViewModel: HomeViewModel,
-) {
-
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        val subject by homeViewModel.emailSubject.collectAsStateWithLifecycle()
-        val body by homeViewModel.emailBody.collectAsStateWithLifecycle()
-        val opened by homeViewModel.emailOpened.collectAsStateWithLifecycle()
-        val onNameEntered: (value: String) -> Unit = remember {
-            return@remember homeViewModel::setEmailSubject
-        }
-        val onRollNoEntered: (value: String) -> Unit = remember {
-            return@remember homeViewModel::setEmailBody
-        }
-        val onCheck: (value: Boolean) -> Unit = remember {
-            return@remember homeViewModel::setEmailOpened
-        }
-        val onSubmit: (value: EmailEntity) -> Unit = remember {
-            return@remember homeViewModel::insertEmail
-        }
-        OutlinedTextField(
-            value = subject,
-            onValueChange = {
-                onNameEntered(it)
-            },
-            placeholder = {
-                Text(text = "Titulo do Email")
-            },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            keyboardActions = KeyboardActions(), maxLines = 1
-        )
-        Spacer(modifier = Modifier.height(15.dp))
-        OutlinedTextField(
-            value = body, onValueChange = {
-                onRollNoEntered(it)
-            },
-            placeholder = {
-                Text(text = "Corpo do Email")
-            },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(),
-            maxLines = 1
-        )
-        Spacer(modifier = Modifier.height(15.dp))
-
-        Checkbox(checked = opened, onCheckedChange = {
-            onCheck(it)
-        })
-        Spacer(modifier = Modifier.height(10.dp))
-        OutlinedButton(onClick = {
-            onSubmit(
-                EmailEntity(
-                    subject = subject,
-                    body = body,
-                    alreadyOpened = opened,
-                    favorite = false,
-                    sender = "Tester",
-                    sentDate = "24/02/2024"
-                )
-            )
-        }) {
-            Text(text = "Criar Email")
-        }
-
-    }
-}
-
-@Composable
-fun BottomContent(
-    homeViewModel: HomeViewModel,
-) {
-
-    val contents by homeViewModel.emailDetailsList.collectAsStateWithLifecycle()
-
-    val mod = Modifier
-        .padding(15.dp)
-        .fillMaxWidth()
-        .height(80.dp)
-
     LazyColumn(
-        content = {
-
-            items(contents) {
-                val item = ImutableEmail(it)
-                EmailCard(wrapper = item, homeViewModel = homeViewModel, mod = mod)
-            }
-        }, modifier = Modifier.fillMaxSize()
-    )
-}
-
-@Immutable
-data class ImutableEmail(val emailEntity: EmailEntity)
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun EmailCard(
-    wrapper: ImutableEmail,
-    homeViewModel: HomeViewModel,
-    mod: Modifier,
-) {
-
-    val onCheckedChange: (value: EmailEntity) -> Unit = remember {
-        return@remember homeViewModel::updateEmail
-    }
-    Card(
-        onClick = {
-
-        }, modifier = mod
+        modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            verticalAlignment = Alignment.CenterVertically
-
-        )
-        {
-            Column(
-                modifier = Modifier
-                    .padding(start = 10.dp)
-                    .weight(3f)
-                    .fillMaxHeight(),
-                verticalArrangement = Arrangement.Center
-            ) {
-
-
-                Text(
-                    text = wrapper.emailEntity.subject,
-                    maxLines = 1,
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Spacer(modifier = Modifier.height(5.dp))
-                Text(
-                    text = wrapper.emailEntity.body,
-                    maxLines = 1,
-                    fontWeight = FontWeight.Normal,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-
-                Checkbox(checked = wrapper.emailEntity.alreadyOpened, onCheckedChange = {
-                    onCheckedChange(
-                        EmailEntity(
-                            wrapper.emailEntity.id,
-                            wrapper.emailEntity.subject,
-                            wrapper.emailEntity.body,
-                        )
-                    )
+        items(emails.value) { email ->
+            EmailCard(email = email,
+                homeViewModel = homeViewModel,
+                modifier = Modifier.padding(vertical = 8.dp),
+                onEmailClick = {
+                    onEmailClick(email)
+                    homeViewModel.setEmailAsOpened(email.id)
                 })
-            }
         }
     }
 }
