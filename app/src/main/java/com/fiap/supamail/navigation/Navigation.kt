@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -22,6 +23,8 @@ import com.fiap.supamail.presentation.components.EmailDetails
 @Composable
 fun Navigation() {
     val navController = rememberNavController()
+    val context = LocalContext.current // Obtém o Context atual
+
     NavHost(navController = navController, startDestination = "home") {
         composable("home") {
             HomeScreen(navController = navController)
@@ -40,8 +43,10 @@ fun Navigation() {
 
             email?.let {
                 EmailDetails(
-                    viewModel,
-                    navigateBack = { navController.popBackStack() })
+                    viewModel = viewModel,
+                    navigateBack = { navController.popBackStack() },
+                    context = context
+                )
             } ?: Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 SnackbarHost(snackbarHostState)
                 LaunchedEffect(key1 = true) {
